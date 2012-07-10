@@ -1,5 +1,5 @@
-Cloudanators - euv
-==================
+euv
+===
 
 These are Erlang bindings to libuv. There goals for this project are to
 create a stable binding to libuv's file handling and demonstrate how that
