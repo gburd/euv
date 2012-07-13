@@ -12,12 +12,27 @@ that against Erlang's builtin HTTP packet parsing.
 Current Status
 --------------
 
-While this NIF works well enough to do basic open/read/write/close file
-IO (on OS X at least) I've completely missed the mark on my original goals of relying on the OTP-8623 optimization for message passing with newly created
-references. Ie, its no better (and I think a tidge slower) than the builtin
-file module. If/when I figure out how to make that selective receive more
-efficient for messages generated from a NIF we can look into rebooting this
-project.
+I've managed to resurect the hopes for this project by doing a bit of
+work hacking in Erlang assembly. The caveat is that this is a bit of a
+hack though it should work well enough for our purposes.
+
+If you have to edit euv.erl then you'll also have to regenerate the euv.S
+file and manually edit it by hand to reintroduce the selective receive
+optimizations. I've written a rebar plugin that automatically checks that
+`euv.S` is tagged with the MD5 of `euv.erl` so that we don't accidentally
+lose this condition. It also builds `euv.beam` from `euv.S` so that we
+aren't including a `.beam` directly in Git.
+
+BIG ASS WARNING
+---------------
+
+This is definitely playing with fire. The Erlang assembly format is
+undocumented and subject to change. While this will serve us well enough
+for the time being and seems to work, basing large projects on this code
+at present is ill advised as the OTP team may decide to change things out
+from under us (which they have big warnings about).
+
+That said, who doesn't like living on the edge every now and again?
 
 Building and Testing
 --------------------
