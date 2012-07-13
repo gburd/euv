@@ -339,6 +339,18 @@ euv_loop_handle(euv_loop_t* loop, euv_req_t* req)
 void
 euv_async_cb(uv_async_t* handle, int status)
 {
+    euv_loop_t* loop = (euv_loop_t*) handle->data;
+    euv_req_t* req;
+
+    while(euv_queue_has_item(loop->reqs)) {
+        req = (euv_req_t*) euv_queue_pop(loop->reqs);
+        if(req == NULL) {
+            uv_unref((uv_handle_t*) handle);
+            return;
+        } else {
+            euv_loop_handle(loop, req);
+        }
+    }
 }
 
 
@@ -352,9 +364,8 @@ euv_loop_init_int(euv_loop_t* loop)
     // manage new requests
     loop->wakeup = enif_alloc(sizeof(struct uv_async_s));
     if(loop->wakeup == NULL) goto error;
-
-    loop->wakeup->data = (void*) loop;
     if(uv_async_init(loop->uvl, loop->wakeup, euv_async_cb) != 0) goto error;
+    loop->wakeup->data = (void*) loop;
 
     return 1;
 
@@ -369,7 +380,6 @@ euv_loop_main(void* arg)
 {
     euv_loop_t* loop = (euv_loop_t*) arg;
     int ret = euv_loop_init_int(loop);
-    euv_req_t* req;
 
     enif_mutex_lock(loop->lock);
     loop->ready = ret ? 1 : -1;
@@ -379,18 +389,7 @@ euv_loop_main(void* arg)
     if(!ret)
         return NULL;
 
-    while(1) {
-        while(euv_queue_has_item(loop->reqs)) {
-            req = (euv_req_t*) euv_queue_pop(loop->reqs);
-            if(req == NULL)
-                goto done;
-            euv_loop_handle(loop, req);
-        }
-
-        uv_run_once(loop->uvl);
-    }
-
-done:
+    uv_run(loop->uvl);
     uv_loop_delete(loop->uvl);
 
     return NULL;
