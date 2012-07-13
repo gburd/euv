@@ -45,5 +45,9 @@ The tests I was using are:
     $ ./test/example-problem.es
     $ ERL_FLAGS="-pa ebin" ./test/example-using-euv.es
 
-The fact that they both follow the same latency curves shows that
-my NIF isn't nearly as awesome as I had hoped it would be.
+You should notice that the increase in times for the tests are now
+drastically different. On my late 2010 MacBook Air (SSD) I'm getting
+nearly 90s for the builtin file module and between 9 and 10s using
+`euv`. Although on the small queue end I'm running slower by nearly
+half a second (1.2 vs 1.65s). To be a viable replacement I'll have to
+track that down and at least be on parity.
