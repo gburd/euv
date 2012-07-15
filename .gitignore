@@ -2,3 +2,4 @@ c_src/*.o
 c_src/libuv/
 ebin/
 priv/
+file_test.dat
