@@ -403,8 +403,10 @@ euv_fs_stat_cb(uv_fs_t* fsreq)
         resp = _kv_add(req, EUV_ATOM_SIZE, s->st_size, resp);
         resp = _kv_add(req, EUV_ATOM_BLOCKS, s->st_blocks, resp);
         resp = _kv_add(req, EUV_ATOM_BLKSIZE, s->st_blksize, resp);
+#if defined(_DARINW_C_SOURCE)
         resp = _kv_add(req, EUV_ATOM_FLAGS, s->st_flags, resp);
         resp = _kv_add(req, EUV_ATOM_GEN, s->st_gen, resp);
+#endif
         resp = euv_make_ok(req->env, resp);
     }
 
