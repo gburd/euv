@@ -44,12 +44,12 @@ case "$1" in
             (cd libuv && svn co http://gyp.googlecode.com/svn/trunk build/gyp)
         fi
 
-        if [ ! -f libuv/.patched ]; then
-            (cd libuv && patch -p1 < ../libuv.patch && touch .patched)
-        fi
+#         if [ ! -f libuv/.patched ]; then
+#             (cd libuv && patch -p1 < ../libuv.patch && touch .patched)
+#         fi
 
         (cd libuv && ./gyp_uv -f make >/dev/null 2>&1)
-        (cd libuv && $MAKE)
+        (cd libuv && $MAKE -j)
 
         ;;
 esac

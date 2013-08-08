@@ -160,7 +160,7 @@ euv_fs_open_cb(uv_fs_t* fsreq)
         resp = enif_make_tuple2(req->env, EUV_ATOM_EUVFILE, resp);
         resp = euv_make_ok(req->env, resp);
     } else {
-        resp = euv_req_errno(req, fsreq->errorno);
+        resp = euv_req_errno(req, fsreq->result);
     }
 
     uv_fs_req_cleanup(fsreq);
@@ -214,7 +214,7 @@ euv_fs_close_cb(uv_fs_t* fsreq)
         resp = EUV_ATOM_OK;
         data->fd = 0;
     } else {
-        resp = euv_req_errno(req, fsreq->errorno);
+        resp = euv_req_errno(req, fsreq->result);
     }
 
     uv_fs_req_cleanup(fsreq);
@@ -255,7 +255,7 @@ euv_fs_read_cb(uv_fs_t* fsreq)
         }
     } else {
         enif_release_binary(&data->buf);
-        resp = euv_req_errno(req, fsreq->errorno);
+        resp = euv_req_errno(req, fsreq->result);
     }
     data->buf.data = NULL;
 
@@ -320,7 +320,7 @@ euv_fs_write_cb(uv_fs_t* fsreq)
         resp = enif_make_uint(req->env, fsreq->result);
         resp = euv_make_ok(req->env, resp);
     } else {
-        resp = euv_req_errno(req, fsreq->errorno);
+        resp = euv_req_errno(req, fsreq->result);
     }
     data->buf.data = NULL;
 
@@ -376,7 +376,7 @@ euv_fs_stat_cb(uv_fs_t* fsreq)
     struct stat* s;
 
     if(fsreq->result != 0) {
-        resp = euv_req_errno(req, fsreq->errorno);
+        resp = euv_req_errno(req, fsreq->result);
     } else {
         s = fsreq->ptr;
         assert(s != NULL && "fs_stat failed");
@@ -474,7 +474,7 @@ euv_fs_utime_cb(uv_fs_t* fsreq)
     if(fsreq->result == 0) {
         resp = EUV_ATOM_OK;
     } else {
-        resp = euv_req_errno(req, fsreq->errorno);
+        resp = euv_req_errno(req, fsreq->result);
     }
 
     uv_fs_req_cleanup(fsreq);

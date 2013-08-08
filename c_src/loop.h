@@ -54,7 +54,7 @@ void euv_req_resp(euv_req_t* req, ERL_NIF_TERM resp);
 void euv_req_resp_ok(euv_req_t* req, ERL_NIF_TERM val);
 void euv_req_resp_error(euv_req_t* req, ERL_NIF_TERM val);
 ERL_NIF_TERM euv_req_uv_error(euv_req_t* req);
-ERL_NIF_TERM euv_req_errno(euv_req_t* req, int errno);
+ERL_NIF_TERM euv_req_errno(euv_req_t* req, ssize_t error);
 
 euv_loop_t* euv_loop_init(ErlNifEnv* env, ERL_NIF_TERM name);
 void euv_loop_destroy(euv_loop_t* loop);

@@ -119,17 +119,17 @@ euv_req_resp_error(euv_req_t* req, ERL_NIF_TERM val)
 ERL_NIF_TERM
 euv_req_uv_error(euv_req_t* req)
 {
-    uv_err_t err = uv_last_error(req->handle->loop->uvl);
+    uv_errno_t err = uv_last_error(req->handle->loop->uvl);
     const char* name = uv_err_name(err);
     return euv_make_error(req->env, euv_make_atom(req->env, name));
 }
 
 
 ERL_NIF_TERM
-euv_req_errno(euv_req_t* req, int errno)
+euv_req_errno(euv_req_t* req, int error)
 {
-    uv_err_t err;
-    err.code = (uv_err_code) errno;
+    uv_errno_t err;
+    err.code = (uv_err_code) error;
     const char* name = uv_err_name(err);
     return euv_make_error(req->env, euv_make_atom(req->env, name));
 }
