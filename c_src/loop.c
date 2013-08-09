@@ -25,6 +25,8 @@ struct euv_loop_s {
     uv_async_t*         wakeup;
     euv_queue_t*        reqs;
 
+    int                 err;
+
     // Only needed during thread start and stop
     ErlNifMutex*        lock;
     ErlNifCond*         cond;
@@ -119,14 +121,13 @@ euv_req_resp_error(euv_req_t* req, ERL_NIF_TERM val)
 ERL_NIF_TERM
 euv_req_uv_error(euv_req_t* req)
 {
-    uv_errno_t err = uv_last_error(req->handle->loop->uvl);
-    const char* name = uv_err_name(err);
-    return euv_make_error(req->env, euv_make_atom(req->env, name));
+    ERL_NIF_TERM atom = euv_make_atom(req->env, uv_strerror(req->handle->loop->err));
+    return euv_make_error(req->env, atom);
 }
 
 
 ERL_NIF_TERM
-euv_req_errno(euv_req_t* req, int error)
+euv_req_errno(euv_req_t* req, ssize_t error)
 {
     uv_errno_t err;
     err.code = (uv_err_code) error;
@@ -275,7 +276,7 @@ euv_loop_notify(euv_loop_t* loop)
 {
     assert(loop != NULL && "invalid loop");
     assert(loop->wakeup != NULL && "invalid wakeup handle");
-    if(uv_async_send(loop->wakeup) != 0)
+    if((loop->err = uv_async_send(loop->wakeup)) != 0)
         return 0;
     return 1;
 }

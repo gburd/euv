@@ -1,56 +1,115 @@
-#!/bin/bash -e
+#!/bin/bash
 
-# Living dangerously
-LIBUV_VSN="master"
-
-if [ `basename $PWD` != "c_src" ]; then
-    # originally "pushd c_src" of bash
-    # but no need to use directory stack push here
-    cd c_src
+# /bin/sh on Solaris is not a POSIX compatible shell, but /usr/bin/ksh is.
+if [ `uname -s` = 'SunOS' -a "${POSIX_SHELL}" != "true" ]; then
+    POSIX_SHELL="true"
+    export POSIX_SHELL
+    exec /usr/bin/ksh $0 $@
 fi
+unset POSIX_SHELL # clear it so if we invoke other scripts, they run as ksh as well
+
+set -e
+
+LIBUV_REPO=git://github.com/joyent/libuv.git
+LIBUV_BRANCH="master"
+LIBUV_DIR=libuv-`basename $LIBUV_BRANCH`
+
+[ `basename $PWD` != "c_src" ] && cd c_src
 
 BASEDIR="$PWD"
 
-# detecting gmake and if exists use it
-# if not use make
-# (code from github.com/tuncer/re2/c_src/build_deps.sh
 which gmake 1>/dev/null 2>/dev/null && MAKE=gmake
 MAKE=${MAKE:-make}
 
+export CFLAGS="$CFLAGS -I $BASEDIR/system/include"
+export CXXFLAGS="$CXXFLAGS -I $BASEDIR/system/include"
+export LDFLAGS="$LDFLAGS -L$BASEDIR/system/lib"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$BASEDIR/system/lib:$LD_LIBRARY_PATH"
+
+get_libuv ()
+{
+    if [ -d $BASEDIR/$LIBUV_DIR/.git ]; then
+        (cd $BASEDIR/$LIBUV_DIR && git pull -u) || exit 1
+    else
+        if [ "X$LIBUV_REF" != "X" ]; then
+            git clone ${LIBUV_REPO} ${LIBUV_DIR} && \
+                (cd $BASEDIR/$LIBUV_DIR && git checkout refs/$LIBUV_REF || exit 1)
+        else
+            git clone ${LIBUV_REPO} ${LIBUV_DIR} && \
+		[ "X$LIBUV_BRANCH" = "Xmaster" ] || \
+                (cd $BASEDIR/$LIBUV_DIR && git checkout -b $LIBUV_BRANCH origin/$LIBUV_BRANCH || exit 1)
+        fi
+        if [ ! -d ${LIBUV_DIR}/build/gyp ]; then
+            (cd $BASEDIR/$LIBUV_DIR && svn co http://gyp.googlecode.com/svn/trunk build/gyp)
+        fi
+    fi
+    [ -d $BASEDIR/$LIBUV_DIR ] || (echo "Missing libuv source directory" && exit 1)
+    (cd $BASEDIR/$LIBUV_DIR
+        [ -e $BASEDIR/libuv-build.patch ] && \
+            (patch -p1 --forward < $BASEDIR/libuv-build.patch || exit 1 )
+        ./gyp_uv -f make >/dev/null 2>&1 || exit 1
+        autoreconf -if #./autogen.sh
+        [ -e $BASEDIR/$LIBUV_DIR/Makefile ] && (cd $BASEDIR/$LIBUV_DIR && $MAKE distclean)
+        libuv_configure;
+    )
+}
+
+libuv_configure ()
+{
+    (cd $BASEDIR/$LIBUV_DIR
+        CFLAGS+=-g ./configure --with-pic --prefix=${BASEDIR}/system || exit 1)
+}
+
+get_deps ()
+{
+    get_libuv;
+}
+
+update_deps ()
+{
+    if [ -d $BASEDIR/$LIBUV_DIR/.git ]; then
+        (cd $BASEDIR/$LIBUV_DIR
+            if [ "X$LIBUV_VSN" == "X" ]; then
+                git pull -u || exit 1
+            else
+                git checkout $LIBUV_VSN || exit 1
+            fi
+        )
+    fi
+}
+
+build_libuv ()
+{
+    libuv_configure;
+    (cd $BASEDIR/$LIBUV_DIR && $MAKE -j && $MAKE install)
+}
+
+
 case "$1" in
     clean)
-        rm -rf libuv
+        rm -rf system $LIBUV_DIR
+        rm -f ${BASEDIR}/../priv/libuv-*.so
         ;;
 
     test)
-        (cd libuv && $MAKE test)
+        (cd $BASEDIR/$LIBUV_DIR && $MAKE -j test)
+        ;;
 
+    update-deps)
+        update-deps;
         ;;
 
     get-deps)
-        if [ ! -d libuv ]; then
-            git clone git://github.com/joyent/libuv.git
-            (cd libuv && git checkout $LIBUV_VSN)
-        fi
+        get_deps;
         ;;
 
     *)
-        if [ ! -d libuv ]; then
-            git clone git://github.com/joyent/libuv.git
-            (cd libuv && git checkout $LIBUV_VSN)
-        fi
+        [ -d $LIBUV_DIR ] || get_libuv;
 
-        if [ ! -d libuv/build/gyp ]; then
-            (cd libuv && svn co http://gyp.googlecode.com/svn/trunk build/gyp)
-        fi
-
-#         if [ ! -f libuv/.patched ]; then
-#             (cd libuv && patch -p1 < ../libuv.patch && touch .patched)
-#         fi
-
-        (cd libuv && ./gyp_uv -f make >/dev/null 2>&1)
-        (cd libuv && $MAKE -j)
-
+        # Build libuv
+        [ -d $BASEDIR/$LIBUV_DIR ] || (echo "Missing libuv source directory" && exit 1)
+        test -f $BASEDIR/system/lib/libuv-[0-9]+.[0-9]+.[0-9]+.so || build_libuv;
+        cp -p -P $BASEDIR/system/lib/libuv.so* ${BASEDIR}/../priv
         ;;
 esac
 
