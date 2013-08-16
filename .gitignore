@@ -4,3 +4,5 @@ c_src/system
 ebin/
 priv/
 file_test.dat
+.eunit
+
