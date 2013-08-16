@@ -10,7 +10,7 @@
 #include "euv.h"
 #include "loop.h"
 #include "util.h"
-
+#include "common.h"
 
 typedef struct {
     euv_loop_t**        loops;
@@ -172,6 +172,9 @@ error:
 static int
 euv_reload(ErlNifEnv* env, void** priv, ERL_NIF_TERM info)
 {
+    UNUSED(env);
+    UNUSED(priv);
+    UNUSED(info);
     return 0;
 }
 
@@ -179,6 +182,7 @@ euv_reload(ErlNifEnv* env, void** priv, ERL_NIF_TERM info)
 static int
 euv_upgrade(ErlNifEnv* env, void** priv, void** old_priv, ERL_NIF_TERM info)
 {
+    UNUSED(old_priv);
     return euv_load(env, priv, info);
 }
 
@@ -186,6 +190,7 @@ euv_upgrade(ErlNifEnv* env, void** priv, void** old_priv, ERL_NIF_TERM info)
 static void
 euv_unload(ErlNifEnv* env, void* priv)
 {
+    UNUSED(env);
     euv_st* st = (euv_st*) priv;
     euv_st_destroy(st);
     return;

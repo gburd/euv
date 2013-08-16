@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "queue.h"
+#include "common.h"
 
 struct euv_qitem_s
 {
@@ -24,6 +25,7 @@ struct euv_queue_s
 euv_queue_t*
 euv_queue_init(const char* name)
 {
+    UNUSED(name);
     euv_queue_t* ret;
 
     ret = (euv_queue_t*) enif_alloc(sizeof(struct euv_queue_s));

@@ -13,6 +13,7 @@
 #include "loop.h"
 #include "queue.h"
 #include "util.h"
+#include "common.h"
 
 
 struct euv_loop_s {
@@ -129,9 +130,7 @@ euv_req_uv_error(euv_req_t* req)
 ERL_NIF_TERM
 euv_req_errno(euv_req_t* req, ssize_t error)
 {
-    uv_errno_t err;
-    err.code = (uv_err_code) error;
-    const char* name = uv_err_name(err);
+    const char* name = uv_err_name(error);
     return euv_make_error(req->env, euv_make_atom(req->env, name));
 }
 
@@ -163,6 +162,7 @@ error:
 void
 euv_handle_destroy(ErlNifEnv* env, void* obj)
 {
+    UNUSED(env);
     euv_handle_t* handle = (euv_handle_t*) obj;
     handle->dtor(handle->loop, handle->data);
 }
@@ -340,6 +340,7 @@ euv_loop_handle(euv_loop_t* loop, euv_req_t* req)
 void
 euv_async_cb(uv_async_t* handle, int status)
 {
+    UNUSED(status);
     euv_loop_t* loop = (euv_loop_t*) handle->data;
     euv_req_t* req;
 
@@ -390,7 +391,7 @@ euv_loop_main(void* arg)
     if(!ret)
         return NULL;
 
-    uv_run(loop->uvl);
+    uv_run(loop->uvl, UV_RUN_DEFAULT);
     uv_loop_delete(loop->uvl);
 
     return NULL;

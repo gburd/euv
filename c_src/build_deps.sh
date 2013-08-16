@@ -108,7 +108,7 @@ case "$1" in
 
         # Build libuv
         [ -d $BASEDIR/$LIBUV_DIR ] || (echo "Missing libuv source directory" && exit 1)
-        test -f $BASEDIR/system/lib/libuv-[0-9]+.[0-9]+.[0-9]+.so || build_libuv;
+        [ -f $BASEDIR/system/lib/libuv.so.11.0.0 ] || build_libuv;
         cp -p -P $BASEDIR/system/lib/libuv.so* ${BASEDIR}/../priv
         ;;
 esac
