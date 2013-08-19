@@ -47,8 +47,8 @@ get_libuv ()
     (cd $BASEDIR/$LIBUV_DIR
         [ -e $BASEDIR/libuv-build.patch ] && \
             (patch -p1 --forward < $BASEDIR/libuv-build.patch || exit 1 )
-        ./gyp_uv -f make >/dev/null 2>&1 || exit 1
-        autoreconf -if #./autogen.sh
+        python2 ./gyp_uv -f make >/dev/null 2>&1 || exit 1
+        ./autogen.sh || exit 1
         [ -e $BASEDIR/$LIBUV_DIR/Makefile ] && (cd $BASEDIR/$LIBUV_DIR && $MAKE distclean)
         libuv_configure;
     )

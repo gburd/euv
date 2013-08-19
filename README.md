@@ -51,3 +51,43 @@ nearly 90s for the builtin file module and between 9 and 10s using
 `euv`. Although on the small queue end I'm running slower by nearly
 half a second (1.2 vs 1.65s). To be a viable replacement I'll have to
 track that down and at least be on parity.
+
+Totally Un-Scientific Test Results
+----------------------------------
+
+Benchmarking (in "air-quotes") with Erlang R16B01 on a Lenovo X1 Carbon laptop
+(Intel(R) Core(TM) i7-3667U CPU @ 2.00GHz) with 8 GB of RAM and an SSD drive
+(ext4:noatime,discard) resulted in the following:
+
+With the Erlang/libuv NIF:
+```
+ERL_FLAGS="-S 2:4 +h 4096 -sbdt nnts -pa ebin" ./test/example-using-euv.es
+       0 ::  2.71s
+      10 ::  2.63s
+    1000 ::  2.35s
+   10000 ::  2.48s
+  100000 ::  7.76s
+ 1000000 :: 59.49s
+```
+
+The Erlang file module:
+```
+ERL_FLAGS="-S 2:4 +h 4096 -sbdt nnts -pa ebin" ./test/example-problem.es
+       0 ::     1.96s
+      10 ::     1.95s
+    1000 ::     1.87s
+   10000 ::     3.32s
+  100000 ::    19.28s
+ 1000000 ::   182.78s
+ ```
+
+and, just to be sure again with Erlang's file module and all available cores enabled:
+```
+ERL_FLAGS="-S 4:4 +h 4096 -sbdt nnts -pa ebin" ./test/example-problem.es
+       0 ::     1.96s
+      10 ::     1.87s
+    1000 ::     1.81s
+   10000 ::     3.18s
+  100000 ::    19.31s
+ 1000000 ::   178.06s
+```
